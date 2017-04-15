@@ -1,24 +1,20 @@
 <?php
 /**
- * Goran functions and definitions
+ * Twenty Seventeen functions and definitions
  *
- * @package Goran
+ * @link https://developer.wordpress.org/themes/basics/theme-functions/
+ *
+ * @package WordPress
+ * @subpackage Twenty_Seventeen
+ * @since 1.0
  */
 
 /**
- * Set the content width based on the theme's design and stylesheet.
+ * Twenty Seventeen only works in WordPress 4.7 or later.
  */
-$content_width = 700; /* pixels */
-
-/**
- * Adjust the content width for Front Page, Full Width and Grid Page Template.
- */
-function edin_content_width() {
-	global $content_width;
-
-	if ( is_page_template( 'page-templates/front-page.php' ) || is_page_template( 'page-templates/full-width-page.php' ) || is_page_template( 'page-templates/grid-page.php' ) ) {
-		$content_width = 1086;
-	}
+if ( version_compare( $GLOBALS['wp_version'], '4.7-alpha', '<' ) ) {
+	require get_template_directory() . '/inc/back-compat.php';
+	return;
 }
 
 /**
@@ -28,216 +24,543 @@ function edin_content_width() {
  * runs before the init hook. The init hook is too late for some features, such
  * as indicating support for post thumbnails.
  */
-function goran_setup() {
+function twentyseventeen_setup() {
+	/*
+	 * Make theme available for translation.
+	 * Translations can be filed at WordPress.org. See: https://translate.wordpress.org/projects/wp-themes/twentyseventeen
+	 * If you're building a theme based on Twenty Seventeen, use a find and replace
+	 * to change 'twentyseventeen' to the name of your theme in all the template files.
+	 */
+	load_theme_textdomain( 'twentyseventeen' );
+
+	// Add default posts and comments RSS feed links to head.
+	add_theme_support( 'automatic-feed-links' );
 
 	/*
-	 * Declare textdomain for this child theme.
+	 * Let WordPress manage the document title.
+	 * By adding theme support, we declare that this theme does not use a
+	 * hard-coded <title> tag in the document head, and expect WordPress to
+	 * provide it for us.
 	 */
-	load_child_theme_textdomain( 'goran', get_stylesheet_directory() . '/languages' );
+	add_theme_support( 'title-tag' );
 
 	/*
 	 * Enable support for Post Thumbnails on posts and pages.
 	 *
-	 * @link http://codex.wordpress.org/Function_Reference/add_theme_support#Post_Thumbnails
+	 * @link https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/
 	 */
-	add_image_size( 'edin-thumbnail-landscape', 314, 228, true );
-	add_image_size( 'edin-thumbnail-square', 314, 314, true );
-	add_image_size( 'edin-featured-image', 772, 9999 );
-	add_image_size( 'edin-hero', 1230, 1230 );
+	add_theme_support( 'post-thumbnails' );
+
+	add_image_size( 'twentyseventeen-featured-image', 2000, 1200, true );
+
+	add_image_size( 'twentyseventeen-thumbnail-avatar', 100, 100, true );
+
+	// Set the default content width.
+	$GLOBALS['content_width'] = 525;
+
+	// This theme uses wp_nav_menu() in two locations.
+	register_nav_menus( array(
+		'top'    => __( 'Top Menu', 'twentyseventeen' ),
+		'social' => __( 'Social Links Menu', 'twentyseventeen' ),
+	) );
 
 	/*
-	 * Unregister nav menu.
+	 * Switch default core markup for search form, comment form, and comments
+	 * to output valid HTML5.
 	 */
-	unregister_nav_menu( 'secondary' );
+	add_theme_support( 'html5', array(
+		'comment-form',
+		'comment-list',
+		'gallery',
+		'caption',
+	) );
 
 	/*
-	 * Editor styles.
+	 * Enable support for Post Formats.
+	 *
+	 * See: https://codex.wordpress.org/Post_Formats
 	 */
-	add_editor_style( array( 'editor-style.css', goran_noto_sans_font_url(), goran_noto_serif_font_url(), goran_droid_sans_mono_font_url() ) );
+	add_theme_support( 'post-formats', array(
+		'aside',
+		'image',
+		'video',
+		'quote',
+		'link',
+		'gallery',
+		'audio',
+	) );
+
+	// Add theme support for Custom Logo.
+	add_theme_support( 'custom-logo', array(
+		'width'       => 250,
+		'height'      => 250,
+		'flex-width'  => true,
+	) );
+
+	// Add theme support for selective refresh for widgets.
+	add_theme_support( 'customize-selective-refresh-widgets' );
+
+	/*
+	 * This theme styles the visual editor to resemble the theme style,
+	 * specifically font, colors, and column width.
+ 	 */
+	add_editor_style( array( 'assets/css/editor-style.css', twentyseventeen_fonts_url() ) );
+
+	// Define and register starter content to showcase the theme on new sites.
+	$starter_content = array(
+		'widgets' => array(
+			// Place three core-defined widgets in the sidebar area.
+			'sidebar-1' => array(
+				'text_business_info',
+				'search',
+				'text_about',
+			),
+
+			// Add the core-defined business info widget to the footer 1 area.
+			'sidebar-2' => array(
+				'text_business_info',
+			),
+
+			// Put two core-defined widgets in the footer 2 area.
+			'sidebar-3' => array(
+				'text_about',
+				'search',
+			),
+		),
+
+		// Specify the core-defined pages to create and add custom thumbnails to some of them.
+		'posts' => array(
+			'home',
+			'about' => array(
+				'thumbnail' => '{{image-sandwich}}',
+			),
+			'contact' => array(
+				'thumbnail' => '{{image-espresso}}',
+			),
+			'blog' => array(
+				'thumbnail' => '{{image-coffee}}',
+			),
+			'homepage-section' => array(
+				'thumbnail' => '{{image-espresso}}',
+			),
+		),
+
+		// Create the custom image attachments used as post thumbnails for pages.
+		'attachments' => array(
+			'image-espresso' => array(
+				'post_title' => _x( 'Espresso', 'Theme starter content', 'twentyseventeen' ),
+				'file' => 'assets/images/espresso.jpg', // URL relative to the template directory.
+			),
+			'image-sandwich' => array(
+				'post_title' => _x( 'Sandwich', 'Theme starter content', 'twentyseventeen' ),
+				'file' => 'assets/images/sandwich.jpg',
+			),
+			'image-coffee' => array(
+				'post_title' => _x( 'Coffee', 'Theme starter content', 'twentyseventeen' ),
+				'file' => 'assets/images/coffee.jpg',
+			),
+		),
+
+		// Default to a static front page and assign the front and posts pages.
+		'options' => array(
+			'show_on_front' => 'page',
+			'page_on_front' => '{{home}}',
+			'page_for_posts' => '{{blog}}',
+		),
+
+		// Set the front page section theme mods to the IDs of the core-registered pages.
+		'theme_mods' => array(
+			'panel_1' => '{{homepage-section}}',
+			'panel_2' => '{{about}}',
+			'panel_3' => '{{blog}}',
+			'panel_4' => '{{contact}}',
+		),
+
+		// Set up nav menus for each of the two areas registered in the theme.
+		'nav_menus' => array(
+			// Assign a menu to the "top" location.
+			'top' => array(
+				'name' => __( 'Top Menu', 'twentyseventeen' ),
+				'items' => array(
+					'link_home', // Note that the core "home" page is actually a link in case a static front page is not used.
+					'page_about',
+					'page_blog',
+					'page_contact',
+				),
+			),
+
+			// Assign a menu to the "social" location.
+			'social' => array(
+				'name' => __( 'Social Links Menu', 'twentyseventeen' ),
+				'items' => array(
+					'link_yelp',
+					'link_facebook',
+					'link_twitter',
+					'link_instagram',
+					'link_email',
+				),
+			),
+		),
+	);
 
 	/**
-	 * Add support for Eventbrite.
-	 * See: https://wordpress.org/plugins/eventbrite-api/
+	 * Filters Twenty Seventeen array of starter content.
+	 *
+	 * @since Twenty Seventeen 1.1
+	 *
+	 * @param array $starter_content Array of starter content.
 	 */
-	add_theme_support( 'eventbrite' );
+	$starter_content = apply_filters( 'twentyseventeen_starter_content', $starter_content );
 
+	add_theme_support( 'starter-content', $starter_content );
 }
-add_action( 'after_setup_theme', 'goran_setup', 11 );
-
-/*
- * Setup the WordPress core custom background feature.
- */
-function goran_custom_background_args( $args ) {
-    return array( 'default-color' => 'e1dfdf' );
-}
-add_filter( 'edin_custom_background_args', 'goran_custom_background_args' );
+add_action( 'after_setup_theme', 'twentyseventeen_setup' );
 
 /**
- * Register Noto Sans font.
+ * Set the content width in pixels, based on the theme's design and stylesheet.
  *
- * @return string
+ * Priority 0 to make it available to lower priority callbacks.
+ *
+ * @global int $content_width
  */
-function goran_noto_sans_font_url() {
-	$noto_sans_font_url = '';
+function twentyseventeen_content_width() {
 
-	/* translators: If there are characters in your language that are not supported
-	 * by Noto Sans, translate this to 'off'. Do not translate into your own language.
-	 */
-	if ( 'off' !== _x( 'on', 'Noto Sans font: on or off', 'goran' ) ) {
-		$subsets = 'latin,latin-ext';
+	$content_width = $GLOBALS['content_width'];
 
-		/* translators: To add an additional Noto Sans character subset specific to your language, translate this to 'cyrillic', 'greek', 'devanagari' or 'vietnamese'. Do not translate into your own language. */
-		$subset = _x( 'no-subset', 'Noto Sans font: add new subset (cyrillic, greek, devanagari or vietnamese)', 'goran' );
+	// Get layout.
+	$page_layout = get_theme_mod( 'page_layout' );
 
-		if ( 'cyrillic' == $subset ) {
-			$subsets .= ',cyrillic-ext,cyrillic';
-		} else if ( 'greek' == $subset ) {
-			$subsets .= ',greek-ext,greek';
-		} else if ( 'devanagari' == $subset ) {
-			$subsets .= ',devanagari';
-		} else if ( 'vietnamese' == $subset ) {
-			$subsets .= ',vietnamese';
+	// Check if layout is one column.
+	if ( 'one-column' === $page_layout ) {
+		if ( twentyseventeen_is_frontpage() ) {
+			$content_width = 644;
+		} elseif ( is_page() ) {
+			$content_width = 740;
 		}
-
-		$query_args = array(
-			'family' => urlencode( 'Noto Sans:400,700,400italic,700italic' ),
-			'subset' => urlencode( $subsets ),
-		);
-
-		$noto_sans_font_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
 	}
 
-	return $noto_sans_font_url;
+	// Check if is single post and there is no sidebar.
+	if ( is_single() && ! is_active_sidebar( 'sidebar-1' ) ) {
+		$content_width = 740;
+	}
+
+	/**
+	 * Filter Twenty Seventeen content width of the theme.
+	 *
+	 * @since Twenty Seventeen 1.0
+	 *
+	 * @param $content_width integer
+	 */
+	$GLOBALS['content_width'] = apply_filters( 'twentyseventeen_content_width', $content_width );
+}
+add_action( 'template_redirect', 'twentyseventeen_content_width', 0 );
+
+/**
+ * Register custom fonts.
+ */
+function twentyseventeen_fonts_url() {
+	$fonts_url = '';
+
+	/**
+	 * Translators: If there are characters in your language that are not
+	 * supported by Libre Franklin, translate this to 'off'. Do not translate
+	 * into your own language.
+	 */
+	$libre_franklin = _x( 'on', 'Libre Franklin font: on or off', 'twentyseventeen' );
+
+	if ( 'off' !== $libre_franklin ) {
+		$font_families = array();
+
+		$font_families[] = 'Libre Franklin:300,300i,400,400i,600,600i,800,800i';
+
+		$query_args = array(
+			'family' => urlencode( implode( '|', $font_families ) ),
+			'subset' => urlencode( 'latin,latin-ext' ),
+		);
+
+		$fonts_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
+	}
+
+	return esc_url_raw( $fonts_url );
 }
 
 /**
- * Register Noto Serif font.
+ * Add preconnect for Google Fonts.
  *
- * @return string
+ * @since Twenty Seventeen 1.0
+ *
+ * @param array  $urls           URLs to print for resource hints.
+ * @param string $relation_type  The relation type the URLs are printed.
+ * @return array $urls           URLs to print for resource hints.
  */
-function goran_noto_serif_font_url() {
-	$noto_serif_font_url = '';
-
-	/* translators: If there are characters in your language that are not supported
-	 * by Noto Serif, translate this to 'off'. Do not translate into your own language.
-	 */
-	if ( 'off' !== _x( 'on', 'Noto Serif font: on or off', 'goran' ) ) {
-		$subsets = 'latin,latin-ext';
-
-		/* translators: To add an additional Noto Serif character subset specific to your language, translate this to 'cyrillic', 'greek' or 'vietnamese'. Do not translate into your own language. */
-		$subset = _x( 'no-subset', 'Noto Serif font: add new subset (cyrillic, greek, vietnamese)', 'goran' );
-
-		if ( 'cyrillic' == $subset ) {
-			$subsets .= ',cyrillic-ext,cyrillic';
-		} else if ( 'greek' == $subset ) {
-			$subsets .= ',greek-ext,greek';
-		} else if ( 'vietnamese' == $subset ) {
-			$subsets .= ',vietnamese';
-		}
-
-		$query_args = array(
-			'family' => urlencode( 'Noto Serif:400,700,400italic,700italic' ),
-			'subset' => urlencode( $subsets ),
+function twentyseventeen_resource_hints( $urls, $relation_type ) {
+	if ( wp_style_is( 'twentyseventeen-fonts', 'queue' ) && 'preconnect' === $relation_type ) {
+		$urls[] = array(
+			'href' => 'https://fonts.gstatic.com',
+			'crossorigin',
 		);
-
-		$noto_serif_font_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
 	}
 
-	return $noto_serif_font_url;
+	return $urls;
 }
+add_filter( 'wp_resource_hints', 'twentyseventeen_resource_hints', 10, 2 );
 
 /**
- * Register Droid Sans Mono font.
+ * Register widget area.
  *
- * @return string
+ * @link https://developer.wordpress.org/themes/functionality/sidebars/#registering-a-sidebar
  */
-function goran_droid_sans_mono_font_url() {
-	$droid_sans_mono_font_url = '';
+function twentyseventeen_widgets_init() {
+	register_sidebar( array(
+		'name'          => __( 'Sidebar', 'twentyseventeen' ),
+		'id'            => 'sidebar-1',
+		'description'   => __( 'Add widgets here to appear in your sidebar.', 'twentyseventeen' ),
+		'before_widget' => '<section id="%1$s" class="widget %2$s">',
+		'after_widget'  => '</section>',
+		'before_title'  => '<h2 class="widget-title">',
+		'after_title'   => '</h2>',
+	) );
 
-	/* translators: If there are characters in your language that are not supported
-	 * by Droid Mono Sans, translate this to 'off'. Do not translate into your own language.
-	 */
-	if ( 'off' !== _x( 'on', 'Droid Sans Mono font: on or off', 'goran' ) ) {
-		$query_args = array(
-			'family' => urlencode( 'Droid Sans Mono' ),
-		);
+	register_sidebar( array(
+		'name'          => __( 'Footer 1', 'twentyseventeen' ),
+		'id'            => 'sidebar-2',
+		'description'   => __( 'Add widgets here to appear in your footer.', 'twentyseventeen' ),
+		'before_widget' => '<section id="%1$s" class="widget %2$s">',
+		'after_widget'  => '</section>',
+		'before_title'  => '<h2 class="widget-title">',
+		'after_title'   => '</h2>',
+	) );
 
-		$droid_sans_mono_font_url = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
+	register_sidebar( array(
+		'name'          => __( 'Footer 2', 'twentyseventeen' ),
+		'id'            => 'sidebar-3',
+		'description'   => __( 'Add widgets here to appear in your footer.', 'twentyseventeen' ),
+		'before_widget' => '<section id="%1$s" class="widget %2$s">',
+		'after_widget'  => '</section>',
+		'before_title'  => '<h2 class="widget-title">',
+		'after_title'   => '</h2>',
+	) );
+}
+add_action( 'widgets_init', 'twentyseventeen_widgets_init' );
+
+/**
+ * Replaces "[...]" (appended to automatically generated excerpts) with ... and
+ * a 'Continue reading' link.
+ *
+ * @since Twenty Seventeen 1.0
+ *
+ * @return string 'Continue reading' link prepended with an ellipsis.
+ */
+function twentyseventeen_excerpt_more( $link ) {
+	if ( is_admin() ) {
+		return $link;
 	}
 
-	return $droid_sans_mono_font_url;
+	$link = sprintf( '<p class="link-more"><a href="%1$s" class="more-link">%2$s</a></p>',
+		esc_url( get_permalink( get_the_ID() ) ),
+		/* translators: %s: Name of current post */
+		sprintf( __( 'Continue reading<span class="screen-reader-text"> "%s"</span>', 'twentyseventeen' ), get_the_title( get_the_ID() ) )
+	);
+	return ' &hellip; ' . $link;
 }
+add_filter( 'excerpt_more', 'twentyseventeen_excerpt_more' );
 
+/**
+ * Handles JavaScript detection.
+ *
+ * Adds a `js` class to the root `<html>` element when JavaScript is detected.
+ *
+ * @since Twenty Seventeen 1.0
+ */
+function twentyseventeen_javascript_detection() {
+	echo "<script>(function(html){html.className = html.className.replace(/\bno-js\b/,'js')})(document.documentElement);</script>\n";
+}
+add_action( 'wp_head', 'twentyseventeen_javascript_detection', 0 );
+
+/**
+ * Add a pingback url auto-discovery header for singularly identifiable articles.
+ */
+function twentyseventeen_pingback_header() {
+	if ( is_singular() && pings_open() ) {
+		printf( '<link rel="pingback" href="%s">' . "\n", get_bloginfo( 'pingback_url' ) );
+	}
+}
+add_action( 'wp_head', 'twentyseventeen_pingback_header' );
+
+/**
+ * Display custom color CSS.
+ */
+function twentyseventeen_colors_css_wrap() {
+	if ( 'custom' !== get_theme_mod( 'colorscheme' ) && ! is_customize_preview() ) {
+		return;
+	}
+
+	require_once( get_parent_theme_file_path( '/inc/color-patterns.php' ) );
+	$hue = absint( get_theme_mod( 'colorscheme_hue', 250 ) );
+?>
+	<style type="text/css" id="custom-theme-colors" <?php if ( is_customize_preview() ) { echo 'data-hue="' . $hue . '"'; } ?>>
+		<?php echo twentyseventeen_custom_colors_css(); ?>
+	</style>
+<?php }
+add_action( 'wp_head', 'twentyseventeen_colors_css_wrap' );
 
 /**
  * Enqueue scripts and styles.
  */
-function goran_scripts() {
-	wp_dequeue_style( 'edin-pt-sans' );
+function twentyseventeen_scripts() {
+	// Add custom fonts, used in the main stylesheet.
+	wp_enqueue_style( 'twentyseventeen-fonts', twentyseventeen_fonts_url(), array(), null );
 
-	wp_dequeue_style( 'edin-pt-serif' );
+	// Theme stylesheet.
+	wp_enqueue_style( 'twentyseventeen-style', get_stylesheet_uri() );
 
-	wp_dequeue_style( 'edin-pt-mono' );
+	// Load the dark colorscheme.
+	if ( 'dark' === get_theme_mod( 'colorscheme', 'light' ) || is_customize_preview() ) {
+		wp_enqueue_style( 'twentyseventeen-colors-dark', get_theme_file_uri( '/assets/css/colors-dark.css' ), array( 'twentyseventeen-style' ), '1.0' );
+	}
 
-	wp_dequeue_style( 'edin-edincon' );
+	// Load the Internet Explorer 9 specific stylesheet, to fix display issues in the Customizer.
+	if ( is_customize_preview() ) {
+		wp_enqueue_style( 'twentyseventeen-ie9', get_theme_file_uri( '/assets/css/ie9.css' ), array( 'twentyseventeen-style' ), '1.0' );
+		wp_style_add_data( 'twentyseventeen-ie9', 'conditional', 'IE 9' );
+	}
 
-	wp_dequeue_script( 'edin-navigation' );
+	// Load the Internet Explorer 8 specific stylesheet.
+	wp_enqueue_style( 'twentyseventeen-ie8', get_theme_file_uri( '/assets/css/ie8.css' ), array( 'twentyseventeen-style' ), '1.0' );
+	wp_style_add_data( 'twentyseventeen-ie8', 'conditional', 'lt IE 9' );
 
-	wp_dequeue_script( 'edin-script' );
+	// Load the html5 shiv.
+	wp_enqueue_script( 'html5', get_theme_file_uri( '/assets/js/html5.js' ), array(), '3.7.3' );
+	wp_script_add_data( 'html5', 'conditional', 'lt IE 9' );
 
-	wp_enqueue_style( 'goran-noto-sans', goran_noto_sans_font_url(), array(), null );
+	wp_enqueue_script( 'twentyseventeen-skip-link-focus-fix', get_theme_file_uri( '/assets/js/skip-link-focus-fix.js' ), array(), '1.0', true );
 
-	wp_enqueue_style( 'goran-noto-serif', goran_noto_serif_font_url(), array(), null );
+	$twentyseventeen_l10n = array(
+		'quote'          => twentyseventeen_get_svg( array( 'icon' => 'quote-right' ) ),
+	);
 
-	wp_enqueue_style( 'goran-droid-sans-mono', goran_droid_sans_mono_font_url(), array(), null );
+	if ( has_nav_menu( 'top' ) ) {
+		wp_enqueue_script( 'twentyseventeen-navigation', get_theme_file_uri( '/assets/js/navigation.js' ), array(), '1.0', true );
+		$twentyseventeen_l10n['expand']         = __( 'Expand child menu', 'twentyseventeen' );
+		$twentyseventeen_l10n['collapse']       = __( 'Collapse child menu', 'twentyseventeen' );
+		$twentyseventeen_l10n['icon']           = twentyseventeen_get_svg( array( 'icon' => 'angle-down', 'fallback' => true ) );
+	}
 
-	wp_enqueue_script( 'goran-navigation', get_stylesheet_directory_uri() . '/js/navigation.js', array( 'jquery' ), '20140807', true );
+	wp_enqueue_script( 'twentyseventeen-global', get_theme_file_uri( '/assets/js/global.js' ), array( 'jquery' ), '1.0', true );
 
-	wp_enqueue_script( 'goran-script', get_stylesheet_directory_uri() . '/js/goran.js', array( 'jquery' ), '20140808', true );
+	wp_enqueue_script( 'jquery-scrollto', get_theme_file_uri( '/assets/js/jquery.scrollTo.js' ), array( 'jquery' ), '2.1.2', true );
+
+	wp_localize_script( 'twentyseventeen-skip-link-focus-fix', 'twentyseventeenScreenReaderText', $twentyseventeen_l10n );
+
+	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+		wp_enqueue_script( 'comment-reply' );
+	}
 }
-add_action( 'wp_enqueue_scripts', 'goran_scripts', 11 );
+add_action( 'wp_enqueue_scripts', 'twentyseventeen_scripts' );
 
 /**
- * Enqueue Google fonts style to admin screen for custom header display.
+ * Add custom image sizes attribute to enhance responsive image functionality
+ * for content images.
  *
- * @return void
+ * @since Twenty Seventeen 1.0
+ *
+ * @param string $sizes A source size value for use in a 'sizes' attribute.
+ * @param array  $size  Image size. Accepts an array of width and height
+ *                      values in pixels (in that order).
+ * @return string A source size value for use in a content image 'sizes' attribute.
  */
-function goran_admin_fonts() {
-	wp_dequeue_style( 'edin-pt-sans' );
+function twentyseventeen_content_image_sizes_attr( $sizes, $size ) {
+	$width = $size[0];
 
-	wp_dequeue_style( 'edin-pt-serif' );
+	if ( 740 <= $width ) {
+		$sizes = '(max-width: 706px) 89vw, (max-width: 767px) 82vw, 740px';
+	}
 
-	wp_dequeue_style( 'edin-pt-mono' );
+	if ( is_active_sidebar( 'sidebar-1' ) || is_archive() || is_search() || is_home() || is_page() ) {
+		if ( ! ( is_page() && 'one-column' === get_theme_mod( 'page_options' ) ) && 767 <= $width ) {
+			 $sizes = '(max-width: 767px) 89vw, (max-width: 1000px) 54vw, (max-width: 1071px) 543px, 580px';
+		}
+	}
 
-	wp_enqueue_style( 'goran-noto-sans', goran_noto_sans_font_url(), array(), null );
-
-	wp_enqueue_style( 'goran-noto-serif', goran_noto_serif_font_url(), array(), null );
-
-	wp_enqueue_style( 'goran-droid-sans-mono', goran_droid_sans_mono_font_url(), array(), null );
+	return $sizes;
 }
-add_action( 'admin_print_scripts-appearance_page_custom-header', 'goran_admin_fonts', 11 );
+add_filter( 'wp_calculate_image_sizes', 'twentyseventeen_content_image_sizes_attr', 10, 2 );
+
+/**
+ * Filter the `sizes` value in the header image markup.
+ *
+ * @since Twenty Seventeen 1.0
+ *
+ * @param string $html   The HTML image tag markup being filtered.
+ * @param object $header The custom header object returned by 'get_custom_header()'.
+ * @param array  $attr   Array of the attributes for the image tag.
+ * @return string The filtered header image HTML.
+ */
+function twentyseventeen_header_image_tag( $html, $header, $attr ) {
+	if ( isset( $attr['sizes'] ) ) {
+		$html = str_replace( $attr['sizes'], '100vw', $html );
+	}
+	return $html;
+}
+add_filter( 'get_header_image_tag', 'twentyseventeen_header_image_tag', 10, 3 );
+
+/**
+ * Add custom image sizes attribute to enhance responsive image functionality
+ * for post thumbnails.
+ *
+ * @since Twenty Seventeen 1.0
+ *
+ * @param array $attr       Attributes for the image markup.
+ * @param int   $attachment Image attachment ID.
+ * @param array $size       Registered image size or flat array of height and width dimensions.
+ * @return string A source size value for use in a post thumbnail 'sizes' attribute.
+ */
+function twentyseventeen_post_thumbnail_sizes_attr( $attr, $attachment, $size ) {
+	if ( is_archive() || is_search() || is_home() ) {
+		$attr['sizes'] = '(max-width: 767px) 89vw, (max-width: 1000px) 54vw, (max-width: 1071px) 543px, 580px';
+	} else {
+		$attr['sizes'] = '100vw';
+	}
+
+	return $attr;
+}
+add_filter( 'wp_get_attachment_image_attributes', 'twentyseventeen_post_thumbnail_sizes_attr', 10, 3 );
+
+/**
+ * Use front-page.php when Front page displays is set to a static page.
+ *
+ * @since Twenty Seventeen 1.0
+ *
+ * @param string $template front-page.php.
+ *
+ * @return string The template to be used: blank if is_home() is true (defaults to index.php), else $template.
+ */
+function twentyseventeen_front_page_template( $template ) {
+	return is_home() ? '' : $template;
+}
+add_filter( 'frontpage_template',  'twentyseventeen_front_page_template' );
 
 /**
  * Implement the Custom Header feature.
  */
-require get_stylesheet_directory() . '/inc/custom-header.php';
+require get_parent_theme_file_path( '/inc/custom-header.php' );
 
 /**
  * Custom template tags for this theme.
  */
-require get_stylesheet_directory() . '/inc/template-tags.php';
+require get_parent_theme_file_path( '/inc/template-tags.php' );
 
 /**
- * Custom functions that act independently of the theme templates.
+ * Additional features to allow styling of the templates.
  */
-require get_stylesheet_directory() . '/inc/extras.php';
+require get_parent_theme_file_path( '/inc/template-functions.php' );
 
 /**
  * Customizer additions.
  */
-require get_stylesheet_directory() . '/inc/customizer.php';
+require get_parent_theme_file_path( '/inc/customizer.php' );
 
 /**
- * Load Jetpack compatibility file.
+ * SVG icons functions and filters.
  */
-require get_stylesheet_directory() . '/inc/jetpack.php';
+require get_parent_theme_file_path( '/inc/icon-functions.php' );

@@ -1,55 +1,53 @@
 <?php
 /**
- * The Header for our theme.
+ * The header for our theme
  *
- * Displays all of the <head> section and everything up till <div id="content">
+ * This is the template that displays all of the <head> section and everything up until <div id="content">
  *
- * @package Goran
+ * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
+ *
+ * @package WordPress
+ * @subpackage Twenty_Seventeen
+ * @since 1.0
+ * @version 1.0
  */
+
 ?><!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <?php language_attributes(); ?> class="no-js no-svg">
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?php wp_title( '|', true, 'right' ); ?></title>
 <link rel="profile" href="http://gmpg.org/xfn/11">
-<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>">
 
 <?php wp_head(); ?>
 </head>
 
 <body <?php body_class(); ?>>
-<div id="page" class="hfeed site">
-	<a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'goran' ); ?></a>
+<div id="page" class="site">
+	<a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'twentyseventeen' ); ?></a>
 
 	<header id="masthead" class="site-header" role="banner">
-		<?php
-			$top_area_content = get_theme_mod( 'goran_top_area_content' );
-			if ( '' != $top_area_content ) :
-		?>
-		<div class="site-top-content">
-			<?php echo wp_kses_post( $top_area_content ); ?>
-		</div><!-- .site-top-content -->
+
+		<?php get_template_part( 'template-parts/header/header', 'image' ); ?>
+
+		<?php if ( has_nav_menu( 'top' ) ) : ?>
+			<div class="navigation-top">
+				<div class="wrap">
+					<?php get_template_part( 'template-parts/navigation/navigation', 'top' ); ?>
+				</div><!-- .wrap -->
+			</div><!-- .navigation-top -->
 		<?php endif; ?>
 
-		<div class="site-branding">
-			<?php edin_the_site_logo(); ?>
-			<h1 class="site-title"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a></h1>
-			<h2 class="site-description"><?php bloginfo( 'description' ); ?></h2>
-		</div><!-- .site-branding -->
-
-		<?php if ( has_nav_menu( 'primary' ) ) : ?>
-			<nav id="site-navigation" class="main-navigation" role="navigation">
-				<button class="menu-toggle"><?php _e( 'Menu', 'goran' ); ?></button>
-				<?php
-					wp_nav_menu( array(
-						'theme_location'  => 'primary',
-						'container_class' => 'menu-primary',
-						'menu_class'      => 'clear',
-					) );
-				?>
-			</nav><!-- #site-navigation -->
-		<?php endif; ?>
 	</header><!-- #masthead -->
 
-	<div id="content" class="site-content">
+	<?php
+	// If a regular post or page, and not the front page, show the featured image.
+	if ( has_post_thumbnail() && ( is_single() || ( is_page() && ! twentyseventeen_is_frontpage() ) ) ) :
+		echo '<div class="single-featured-image-header">';
+		the_post_thumbnail( 'twentyseventeen-featured-image' );
+		echo '</div><!-- .single-featured-image-header -->';
+	endif;
+	?>
+
+	<div class="site-content-contain">
+		<div id="content" class="site-content">

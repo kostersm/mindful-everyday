@@ -1,85 +1,120 @@
 <?php
 /**
- * Sample implementation of the Custom Header feature
- * http://codex.wordpress.org/Custom_Headers
+ * Custom header implementation
  *
- * @package Goran
+ * @link https://codex.wordpress.org/Custom_Headers
+ *
+ * @package WordPress
+ * @subpackage Twenty_Seventeen
+ * @since 1.0
  */
 
 /**
- * Setup the WordPress core custom header feature.
+ * Set up the WordPress core custom header feature.
  *
- * @uses edin_header_style()
- * @uses edin_admin_header_style()
- * @uses edin_admin_header_image()
+ * @uses twentyseventeen_header_style()
  */
-function goran_custom_header_setup() {
-	add_theme_support( 'custom-header', apply_filters( 'edin_custom_header_args', array(
-		'default-text-color'     => 'ffffff',
-		'height'                 => 576,
+function twentyseventeen_custom_header_setup() {
+
+	/**
+	 * Filter Twenty Seventeen custom-header support arguments.
+	 *
+	 * @since Twenty Seventeen 1.0
+	 *
+	 * @param array $args {
+	 *     An array of custom-header support arguments.
+	 *
+	 *     @type string $default-image     		Default image of the header.
+	 *     @type string $default_text_color     Default color of the header text.
+	 *     @type int    $width                  Width in pixels of the custom header image. Default 954.
+	 *     @type int    $height                 Height in pixels of the custom header image. Default 1300.
+	 *     @type string $wp-head-callback       Callback function used to styles the header image and text
+	 *                                          displayed on the blog.
+	 *     @type string $flex-height     		Flex support for height of header.
+	 * }
+	 */
+	add_theme_support( 'custom-header', apply_filters( 'twentyseventeen_custom_header_args', array(
+		'default-image'      => get_parent_theme_file_uri( '/assets/images/header.jpg' ),
+		'width'              => 2000,
+		'height'             => 1200,
+		'flex-height'        => true,
+		'video'              => true,
+		'wp-head-callback'   => 'twentyseventeen_header_style',
 	) ) );
-}
-add_action( 'after_setup_theme', 'goran_custom_header_setup' );
 
-/**
- * Styles the header image displayed on the Appearance > Header admin panel.
- *
- * @see goran_custom_header_setup().
- */
-function edin_admin_header_style() {
-?>
-	<style type="text/css">
-		.appearance_page_custom-header #headimg {
-			position: relative;
-			min-height: 96px;
-			background-color: #b23d3c;
-			background-position: 50% 50%;
-			background-repeat: no-repeat;
-			-moz-background-size: cover;
-			-o-background-size: cover;
-			-webkit-background-size: cover;
-			background-size: cover;
-			font-family: "Noto Sans", sans-serif;
-		}
-		.appearance_page_custom-header #headimg:before {
-			content: '';
-			display: block;
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: rgba(0, 0, 0, 0.225);
-		}
-		#headimg h1 {
-			position: relative;
-			padding: 24px 72px;
-			margin: 0;
-			font-size: 36px;
-			line-height: 48px;
-			text-transform: uppercase;
-		}
-		#headimg h1 a {
-			text-decoration: none;
-		}
-	</style>
-<?php
+	register_default_headers( array(
+		'default-image' => array(
+			'url'           => '%s/assets/images/header.jpg',
+			'thumbnail_url' => '%s/assets/images/header.jpg',
+			'description'   => __( 'Default Header Image', 'twentyseventeen' ),
+		),
+	) );
 }
+add_action( 'after_setup_theme', 'twentyseventeen_custom_header_setup' );
 
+if ( ! function_exists( 'twentyseventeen_header_style' ) ) :
 /**
- * Custom header image markup displayed on the Appearance > Header admin panel.
+ * Styles the header image and text displayed on the blog.
  *
- * @see goran_custom_header_setup().
+ * @see twentyseventeen_custom_header_setup().
  */
-function edin_admin_header_image() {
-	$style = sprintf( ' style="color:#%s;"', get_header_textcolor() );
-	$image = sprintf( ' style="background-image:none"', get_header_image() );
-	if ( get_header_image() ) {
-		$image = sprintf( ' style="background-image:url(%s)"', get_header_image() );
+function twentyseventeen_header_style() {
+	$header_text_color = get_header_textcolor();
+
+	// If no custom options for text are set, let's bail.
+	// get_header_textcolor() options: add_theme_support( 'custom-header' ) is default, hide text (returns 'blank') or any hex value.
+	if ( get_theme_support( 'custom-header', 'default-text-color' ) === $header_text_color ) {
+		return;
 	}
-?>
-	<div id="headimg"<?php echo $image; ?>>
-		<h1 class="displaying-header-text"><a id="name"<?php echo $style; ?> onclick="return false;" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php bloginfo( 'name' ); ?></a></h1>
-	</div>
-<?php
+
+	// If we get this far, we have custom styles. Let's do this.
+	?>
+	<style id="twentyseventeen-custom-header-styles" type="text/css">
+	<?php
+		// Has the text been hidden?
+		if ( 'blank' === $header_text_color ) :
+	?>
+		.site-title,
+		.site-description {
+			position: absolute;
+			clip: rect(1px, 1px, 1px, 1px);
+		}
+	<?php
+		// If the user has set a custom color for the text use that.
+		else :
+	?>
+		.site-title a,
+		.colors-dark .site-title a,
+		.colors-custom .site-title a,
+		body.has-header-image .site-title a,
+		body.has-header-video .site-title a,
+		body.has-header-image.colors-dark .site-title a,
+		body.has-header-video.colors-dark .site-title a,
+		body.has-header-image.colors-custom .site-title a,
+		body.has-header-video.colors-custom .site-title a,
+		.site-description,
+		.colors-dark .site-description,
+		.colors-custom .site-description,
+		body.has-header-image .site-description,
+		body.has-header-video .site-description,
+		body.has-header-image.colors-dark .site-description,
+		body.has-header-video.colors-dark .site-description,
+		body.has-header-image.colors-custom .site-description,
+		body.has-header-video.colors-custom .site-description {
+			color: #<?php echo esc_attr( $header_text_color ); ?>;
+		}
+	<?php endif; ?>
+	</style>
+	<?php
 }
+endif; // End of twentyseventeen_header_style.
+
+/**
+ * Customize video play/pause button in the custom header.
+ */
+function twentyseventeen_video_controls( $settings ) {
+	$settings['l10n']['play'] = '<span class="screen-reader-text">' . __( 'Play background video', 'twentyseventeen' ) . '</span>' . twentyseventeen_get_svg( array( 'icon' => 'play' ) );
+	$settings['l10n']['pause'] = '<span class="screen-reader-text">' . __( 'Pause background video', 'twentyseventeen' ) . '</span>' . twentyseventeen_get_svg( array( 'icon' => 'pause' ) );
+	return $settings;
+}
+add_filter( 'header_video_settings', 'twentyseventeen_video_controls' );
